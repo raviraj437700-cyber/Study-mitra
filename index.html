@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Study Assistant</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+    body { background: #0f172a; color: #f8fafc; min-height: 100vh; padding: 20px 10px; display: flex; justify-content: center; }
+    .container { width: 100%; max-width: 600px; background: #1e293b; border-radius: 16px; padding: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); border: 1px solid #334155; }
+    h1 { text-align: center; font-size: 1.6rem; color: #38bdf8; margin-bottom: 20px; }
+    .tabs { display: flex; gap: 8px; margin-bottom: 20px; overflow-x: auto; padding-bottom: 5px; }
+    .tab-btn { background: #334155; color: #94a3b8; border: none; padding: 10px 14px; border-radius: 8px; cursor: pointer; font-weight: 600; white-space: nowrap; font-size: 0.85rem; }
+    .tab-btn.active { background: #0284c7; color: #fff; }
+    .section { display: none; }
+    .section.active { display: block; }
+    label { font-size: 0.85rem; color: #cbd5e1; display: block; margin-top: 12px; margin-bottom: 4px; }
+    input, select, textarea { width: 100%; background: #0f172a; border: 1px solid #475569; color: #fff; padding: 10px; border-radius: 8px; font-size: 0.9rem; outline: none; }
+    button.action-btn { width: 100%; margin-top: 18px; padding: 12px; background: linear-gradient(135deg, #0284c7, #2563eb); color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 1rem; }
+    button.action-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+    .output-box { margin-top: 20px; background: #0f172a; border-radius: 8px; padding: 15px; border: 1px solid #334155; font-size: 0.9rem; line-height: 1.6; white-space: pre-wrap; display: none; }
+    .subject-row { display: flex; gap: 8px; margin-bottom: 8px; }
+    .flashcard { background: #334155; padding: 12px; border-radius: 8px; margin-bottom: 10px; border-left: 4px solid #38bdf8; }
+    .quiz-card { background: #334155; padding: 12px; border-radius: 8px; margin-bottom: 12px; }
+    .quiz-option { background: #1e293b; padding: 8px; border-radius: 6px; margin-top: 6px; font-size: 0.85rem; cursor: pointer; border: 1px solid #475569; }
+    footer { text-align: center; margin-top: 20px; font-size: 0.75rem; color: #64748b; }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <h1>🚀 AI Study Assistant</h1>
+
+  <div class="tabs">
+    <button class="tab-btn active" onclick="switchTab('roadmap')">Roadmap</button>
+    <button class="tab-btn" onclick="switchTab('flashcards')">Flashcards</button>
+    <button class="tab-btn" onclick="switchTab('quiz')">Quiz</button>
+    <button class="tab-btn" onclick="switchTab('summary')">Summary</button>
+    <button class="tab-btn" onclick="switchTab('doubt')">Doubt Solver</button>
+  </div>
+
+  <!-- ROADMAP -->
+  <div id="sec-roadmap" class="section active">
+    <label>Student Ka Naam:</label>
+    <input type="text" id="rm-name" placeholder="Ravi">
+    <label>Exam Me Bache Din:</label>
+    <input type="number" id="rm-days" value="30">
+    <label>Daily Padhne Ke Ghante:</label>
+    <input type="number" id="rm-hours" value="6">
+    <label>Subjects & Chapters:</label>
+    <div id="subject-list">
+      <div class="subject-row">
+        <input type="text" placeholder="Subject (e.g. Physics)" class="sub-name">
+        <input type="number" placeholder="Chapters" class="sub-ch" style="width: 100px;">
+      </div>
+    </div>
+    <button type="button" onclick="addSubjectRow()" style="background:#334155; color:#fff; border:none; padding:6px 10px; border-radius:6px; margin-top:6px; cursor:pointer; font-size:0.8rem;">+ Add Subject</button>
+    <button class="action-btn" onclick="generateRoadmap()">Roadmap Banaoo</button>
+  </div>
+
+  <!-- FLASHCARDS -->
+  <div id="sec-flashcards" class="section">
+    <label>Chapter PDF Select Karein:</label>
+    <input type="file" id="fc-pdf" accept="application/pdf">
+    <label>Bhasha (Language):</label>
+    <select id="fc-lang">
+      <option value="Hinglish">Hinglish</option>
+      <option value="Hindi">Hindi</option>
+      <option value="English">English</option>
+    </select>
+    <label>Kitne Flashcards Chahiye?</label>
+    <input type="number" id="fc-count" value="15">
+    <button class="action-btn" onclick="generateFlashcards()">Flashcards Generate Karo</button>
+  </div>
+
+  <!-- QUIZ -->
+  <div id="sec-quiz" class="section">
+    <label>Chapter PDF Select Karein:</label>
+    <input type="file" id="qz-pdf" accept="application/pdf">
+    <label>Difficulty Level:</label>
+    <select id="qz-level">
+      <option value="Medium">Medium</option>
+      <option value="Aasan">Aasan</option>
+      <option value="Kathin">Kathin</option>
+    </select>
+    <label>Kitne Sawal Chahiye?</label>
+    <input type="number" id="qz-count" value="10">
+    <button class="action-btn" onclick="generateQuiz()">Quiz Generate Karo</button>
+  </div>
+
+  <!-- SUMMARY -->
+  <div id="sec-summary" class="section">
+    <label>Chapter PDF Select Karein:</label>
+    <input type="file" id="sm-pdf" accept="application/pdf">
+    <label>Summary Ka Style:</label>
+    <select id="sm-mode">
+      <option value="revision">5-Min Revision Notes</option>
+      <option value="short">Short Summary</option>
+      <option value="simple">Simple Explanation</option>
+    </select>
+    <button class="action-btn" onclick="generateSummary()">Summary Generate Karo</button>
+  </div>
+
+  <!-- DOUBT SOLVER -->
+  <div id="sec-doubt" class="section">
+    <label>Sawal Likhein (Optional):</label>
+    <textarea id="db-text" rows="3" placeholder="Apna doubt yahan likhein..."></textarea>
+    <label>Ya Photo Upload Karein:</label>
+    <input type="file" id="db-img" accept="image/*">
+    <button class="action-btn" onclick="solveDoubt()">Doubt Solve Karo</button>
+  </div>
+
+  <div id="output" class="output-box"></div>
+
+  <footer>Created with ❤️ for Students</footer>
+</div>
+
+<script>
+  function switchTab(tab) {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+    event.target.classList.add('active');
+    document.getElementById('sec-' + tab).classList.add('active');
+    document.getElementById('output').style.display = 'none';
+  }
+
+  function addSubjectRow() {
+    const div = document.createElement('div');
+    div.className = 'subject-row';
+    div.innerHTML = `<input type="text" placeholder="Subject" class="sub-name"><input type="number" placeholder="Chapters" class="sub-ch" style="width: 100px;">`;
+    document.getElementById('subject-list').appendChild(div);
+  }
+
+  function fileToBase64(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result.split(',')[1]);
+      reader.onerror = error => reject(error);
+    });
+  }
+
+  async function callAPI(payload) {
+    const out = document.getElementById('output');
+    out.style.display = 'block';
+    out.innerHTML = '⏳ AI Process kar raha hai, kripya thoda wait karein...';
+
+    try {
+      const res = await fetch('/api/ai', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+      if (data.error) {
+        out.innerHTML = '❌ ' + data.error;
+      } else {
+        return data;
+      }
+    } catch (e) {
+      out.innerHTML = '❌ Network Error/Server Error. Dobara try karein.';
+    }
+    return null;
+  }
+
+  async function generateRoadmap() {
+    const name = document.getElementById('rm-name').value;
+    const days = document.getElementById('rm-days').value;
+    const hours = document.getElementById('rm-hours').value;
+    const names = document.querySelectorAll('.sub-name');
+    const chs = document.querySelectorAll('.sub-ch');
+    
+    let subjects = [];
+    names.forEach((n, i) => {
+      if (n.value) subjects.push({ name: n.value, chapters: chs[i].value || 1 });
+    });
+
+    const res = await callAPI({ mode: 'roadmap', name, days, hours, subjects });
+    if (res && res.text) {
+      document.getElementById('output').innerHTML = res.text;
+    }
+  }
+
+  async function generateFlashcards() {
+    const file = document.getElementById('fc-pdf').files[0];
+    if (!file) return alert('Kripya PDF file select karein');
+    const pdfBase64 = await fileToBase64(file);
+    const lang = document.getElementById('fc-lang').value;
+    const count = document.getElementById('fc-count').value;
+
+    const res = await callAPI({ mode: 'flashcards', pdf: pdfBase64, lang, count });
+    if (res && res.cards) {
+      let html = '<h3>📇 Flashcards:</h3><br>';
+      res.cards.forEach((c, i) => {
+        html += `<div class="flashcard"><b>Q${i+1}:</b> ${c.q}<br><br><b>Ans:</b> ${c.a}</div>`;
+      });
+      document.getElementById('output').innerHTML = html;
+    }
+  }
+
+  async function generateQuiz() {
+    const file = document.getElementById('qz-pdf').files[0];
+    if (!file) return alert('Kripya PDF file select karein');
+    const pdfBase64 = await fileToBase64(file);
+    const level = document.getElementById('qz-level').value;
+    const count = document.getElementById('qz-count').value;
+
+    const res = await callAPI({ mode: 'quiz', pdf: pdfBase64, level, count });
+    if (res && res.quiz) {
+      let html = '<h3>📝 Practice Quiz:</h3><br>';
+      res.quiz.forEach((q, i) => {
+        html += `<div class="quiz-card"><b>Q${i+1}:</b> ${q.q}<br>`;
+        q.o.forEach((opt, idx) => {
+          const isCorrect = idx === q.a ? ' (Sahi Answer)' : '';
+          html += `<div class="quiz-option">${String.fromCharCode(65+idx)}. ${opt}${isCorrect}</div>`;
+        });
+        html += `<br><small>💡 <i>${q.why}</i></small></div>`;
+      });
+      document.getElementById('output').innerHTML = html;
+    }
+  }
+
+  async function generateSummary() {
+    const file = document.getElementById('sm-pdf').files[0];
+    if (!file) return alert('Kripya PDF file select karein');
+    const pdfBase64 = await fileToBase64(file);
+    const smode = document.getElementById('sm-mode').value;
+
+    const res = await callAPI({ mode: 'summary', pdf: pdfBase64, smode });
+    if (res && res.text) {
+      document.getElementById('output').innerHTML = res.text;
+    }
+  }
+
+  async function solveDoubt() {
+    const text = document.getElementById('db-text').value;
+    const file = document.getElementById('db-img').files[0];
+    let images = [];
+    if (file) {
+      const imgBase64 = await fileToBase64(file);
+      images.push(imgBase64);
+    }
+
+    if (!text && !images.length) return alert('Question text ya photo daalein');
+
+    const res = await callAPI({ mode: 'doubt', text, images });
+    if (res && res.text) {
+      document.getElementById('output').innerHTML = res.text;
+    }
+  }
+</script>
+</body>
+  </html>
+  
